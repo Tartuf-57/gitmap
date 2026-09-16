@@ -1,14 +1,12 @@
 package main
 
 import (
-	"flag"
+	"bufio"
 	"fmt"
-	"log"
 	"io"
-	"io/ioutil"
+	"log"
 	"os"
 	"os/user"
-	"bufio"
 	"strings"
 )
 
@@ -22,23 +20,23 @@ func scan(path string) {
 
 func scanGitFolders(folders []string, folder string) []string {
 	folder = strings.TrimSuffix(folder, "/")
-	f, err := os.Open(folder);
+	f, err := os.Open(folder)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	files, err := f.Readdir(-1)
-	f.close()
+	f.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var path string
-	for _,file: := files {
+	for _, file := range files {
 		if file.IsDir() {
 			path = folder + "/" + file.Name()
 			if file.Name() == ".git" {
-				path = string.Trimsuffix(path, "/.git")
+				path = strings.TrimSuffix(path, "/.git")
 				fmt.Println(path)
 				folders = append(folders, path)
 				continue
@@ -52,48 +50,46 @@ func scanGitFolders(folders []string, folder string) []string {
 	return folders
 }
 
-func addSliceElem (filepath string, newRepos[] string) {
-	existingRepos := parseFileSlice (filepath)
+func addSliceElem(filepath string, newRepos []string) {
+	existingRepos := parseFileSlice(filepath)
 	repos := joinSlice(newRepos, existingRepos)
 	dumpSlice(repos, filepath)
 }
 
-func openFile (path string) *os.File{
-	f,err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0755)
+func openFile(path string) *os.File {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0755)
 	if err != nil {
 		if os.IsNotExist(err) {
 			_, err := os.Create(path)
 			if err != nil {
 				panic(err)
 			}
-		}
-		else {
+		} else {
 			panic(err)
 		}
 	}
 	return f
 }
 
-func parseFileSlice (filepath string) []string {
+func parseFileSlice(filepath string) []string {
 	f := openFile(filepath)
 	defer f.Close()
-	
+
 	var line []string
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		line = append(line, scanner.Text())
 	}
-	if err:=Scanner.Err(); err != nil {
+	if err := scanner.Err(); err != nil {
 		if err != io.EOF {
 			panic(err)
 		}
 	}
-	return lines
+	return line
 }
 
-
-func joinSlice (newslice []string, existing []string) []string {
-	for _,i := range newslice {
+func joinSlice(newslice []string, existing []string) []string {
+	for _, i := range newslice {
 		if !sliceContains(existing, i) {
 			existing = append(existing, i)
 		}
@@ -102,7 +98,7 @@ func joinSlice (newslice []string, existing []string) []string {
 }
 
 func sliceContains(slice []string, value string) bool {
-	for _,v := slice {
+	for _, v := range slice {
 		if v == value {
 			return true
 		}
@@ -110,20 +106,19 @@ func sliceContains(slice []string, value string) bool {
 	return false
 }
 
-func dumpSlice (repos []string, filepath string) {
-	content := string.Join(repos, "\n")
-	os.WriteFile(filepath, []bye(content), 0755)
+func dumpSlice(repos []string, filepath string) {
+	content := strings.Join(repos, "\n")
+	os.WriteFile(filepath, []byte(content), 0755)
 }
 
-func dfsFolderScan (folder string) []string {
+func dfsFolderScan(folder string) []string {
 	return scanGitFolders(make([]string, 0), folder)
 }
 
 func getDotFilePath() string {
-	usr, err := user.Current();
+	usr, err := user.Current()
 	if err != nil {
-		fmt.Fatalf("Failed to look up the current user: %v", err)
-		log.Fatal(err)
+		log.Fatalf("Failed to look up the current user: %v", err)
 	}
 	dotFile := usr.HomeDir + "./gogitlocalstats"
 	return dotFile
