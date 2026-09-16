@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
 )
 
@@ -57,16 +58,9 @@ func addSliceElem(filepath string, newRepos []string) {
 }
 
 func openFile(path string) *os.File {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0755)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
-		if os.IsNotExist(err) {
-			_, err := os.Create(path)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			panic(err)
-		}
+		panic(err)
 	}
 	return f
 }
@@ -120,6 +114,5 @@ func getDotFilePath() string {
 	if err != nil {
 		log.Fatalf("Failed to look up the current user: %v", err)
 	}
-	dotFile := usr.HomeDir + "./gogitlocalstats"
-	return dotFile
+	return filepath.Join(usr.HomeDir, "gogitlocalstats")
 }
